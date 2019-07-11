@@ -127,7 +127,7 @@ function (angular, _, moment, sdk, dateMath, kbn) {
 
   MonascaDatasource.prototype.dimensionValuesQuery = function(params) {
     var datasource = this;
-    var url = this.url_version + '/metrics/dimensions/values';
+    var url = this.url_version + '/metrics/dimensions/names/values';
     params = Object.assign(params, this.timeRange())
     console.log(params)
     return this._limitedMonascaRequest(url, params, false).then(function(data) {
