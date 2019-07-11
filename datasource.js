@@ -52,7 +52,11 @@ function (angular, _, moment, sdk, dateMath, kbn) {
   }
 
   MonascaDatasource.prototype.timeRange = function() {
-    return angular.element('grafana-app').injector().get('timeSrv').timeRange();
+    var timeRange = angular.element('grafana-app').injector().get('timeSrv').timeRange();
+    return {
+      start_time: this.translateTime(timeRange.from),
+      end_time: this.translateTime(timeRange.to),
+    };
   };
 
   MonascaDatasource.prototype.query = function(options) {
@@ -105,8 +109,7 @@ function (angular, _, moment, sdk, dateMath, kbn) {
 
   MonascaDatasource.prototype.namesQuery = function() {
     var datasource = this;
-    var url = this.url_version + this.buildPathWithTimeRange('/metrics/names');
-    console.log(url);
+    var url = this.url_version + '/metrics/names';
     return this._limitedMonascaRequest(url, {}, false).then(function(data) {
       return datasource.convertDataList(data, 'name');
     }).catch(function(err) {throw err;});
@@ -115,6 +118,8 @@ function (angular, _, moment, sdk, dateMath, kbn) {
   MonascaDatasource.prototype.dimensionNamesQuery = function(params) {
     var datasource = this;
     var url = this.url_version + '/metrics/dimensions/names';
+    params = Object.assign(params, this.timeRange())
+    console.log(params)
     return this._limitedMonascaRequest(url, params, false).then(function(data) {
       return datasource.convertDataList(data, 'dimension_name');
     }).catch(function(err) {throw err;});
@@ -122,7 +127,9 @@ function (angular, _, moment, sdk, dateMath, kbn) {
 
   MonascaDatasource.prototype.dimensionValuesQuery = function(params) {
     var datasource = this;
-    var url = this.url_version + '/metrics/dimensions/names/values';
+    var url = this.url_version + '/metrics/dimensions/values';
+    params = Object.assign(params, this.timeRange())
+    console.log(params)
     return this._limitedMonascaRequest(url, params, false).then(function(data) {
       return datasource.convertDataList(data, 'dimension_value');
     }).catch(function(err) {throw err;});
@@ -134,17 +141,6 @@ function (angular, _, moment, sdk, dateMath, kbn) {
       return element[key];
     });
     return values;
-  };
-
-  MonascaDatasource.prototype.buildPathWithTimeRange = function(path) {
-    var params = {};
-    var timeRange = this.timeRange()
-    params.start_time = this.translateTime(timeRange.from);
-    params.end_time = this.translateTime(timeRange.to);
-    path += '?' + Object.keys(params).map(function(key) {
-      return key + '=' + params[key];
-    }).join('&');
-    return path;
   };
 
   MonascaDatasource.prototype.buildDataQuery = function(options, from, to) {
